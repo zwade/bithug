@@ -1,7 +1,10 @@
 import { Router } from "express";
 import * as bodyParser from "body-parser";
+import fetch from "node-fetch";
 
 import { GitManager } from "./git";
+import { webhookManager } from "./webhooks";
+import { formatString } from "./utils";
 
 const router = Router();
 
@@ -15,11 +18,9 @@ router.use("/:user/:repo", async (req, res, next) => {
 })
 
 router.use("/:user/:repo", async (req, res, next) => {
-    console.log("Authenticated as ", req.user);
-
     const repoOwner = req.params.user;
     const repo = req.params.repo;
-    if (!/^[a-zA-Z0-9_-]{3,}$/.exec(repoOwner) || !/^[a-zA-Z0-9_\-\.]{3,}$/.exec(repo)) {
+    if (!/^[a-zA-Z0-9_-]+$/.exec(repoOwner) || !/^[a-zA-Z0-9_\-\.]+$/.exec(repo)) {
         return res.status(404).end();
     }
 
@@ -32,7 +33,11 @@ router.use("/:user/:repo", async (req, res, next) => {
     }
 
     const potentialRepo = new GitManager(`${repoOwner}/${repo}`);
-    const configCommit = await potentialRepo.getCommit("refs/meta/config");
+    const hash = await potentialRepo.resolveRef("refs/meta/config");
+    if (!hash) {
+        return res.status(404).end();
+    }
+    const configCommit = await potentialRepo.getCommit(hash);
     if (!configCommit) {
         return res.status(404).end()
     }
@@ -52,7 +57,39 @@ router.use("/:user/:repo", async (req, res, next) => {
     }
 
     req.git = potentialRepo;
+    return next();
 })
+
+router.use("/:user/:repo/webhooks", bodyParser.json());
+router.get("/:user/:repo/webhooks", async (req, res) => {
+    if (req.user.kind === "admin" || req.user.kind === "none") {
+        return res.send({ webhooks: [] });
+    }
+    const webhooks = await webhookManager.getWebhooksForUser(req.git.repo, req.user.user);
+    return res.send(webhooks.map((webhook) => ({ ...webhook, body: webhook.body.toString("base64") })));
+});
+router.post("/:user/:repo/webhooks", async (req, res) => {
+    if (req.user.kind === "admin" || req.user.kind === "none") {
+        return res.status(400).end();
+    }
+
+    const { url, body, contentType } = await req.body;
+    const validationUrl = new URL(url);
+    if (validationUrl.port !== "" && validationUrl.port !== "80") {
+        throw new Error("Url must go to port 80");
+    }
+    if (validationUrl.host === "localhost" || validationUrl.host === "127.0.0.1") {
+        throw new Error("Url must not go to localhost");
+    }
+
+    if (typeof contentType !== "string" || typeof body !== "string") {
+        throw new Error("Bad arguments");
+    }
+    const trueBody = Buffer.from(body, "base64");
+
+    await webhookManager.addWebhook(req.git.repo, req.user.user, url, contentType, trueBody);
+    return res.send({});
+});
 
 router.use("/:user/:repo/api", async (req, res, next) => {
     const ref = req.query.ref;
@@ -84,7 +121,7 @@ router.use("/:user/:repo/api/blob", async (req, res) => {
     res.send({ blob });
 });
 
-router.use("/:user/:repo/info/refs", (req, res) => {
+router.get("/:user/:repo/info/refs", (req, res) => {
     const service = req.query.service;
     if (service === "git-upload-pack") {
         req.git.uploadPackGet(res);
@@ -94,14 +131,32 @@ router.use("/:user/:repo/info/refs", (req, res) => {
 });
 
 router.use("/:user/:repo/git-upload-pack", bodyParser.raw({ type: "application/x-git-upload-pack-request" }))
-router.use("/:user/:repo/git-upload-pack", async (req, res) => {
+router.post("/:user/:repo/git-upload-pack", async (req, res) => {
     await req.git.uploadPackPost(res, req.body);
 });
 
 router.use("/:user/:repo/git-receive-pack", bodyParser.raw({ type: "application/x-git-receive-pack-request" }))
-router.use("/:user/:repo/git-receive-pack", async (req, res) => {
+router.post("/:user/:repo/git-receive-pack", async (req, res) => {
     const ref = await req.git.receivePackPost(res, req.body);
-    console.log("updated ref", ref);
+    const webhooks = await webhookManager.getWebhooksForRepo(req.git.repo);
+    const options = {
+        ref,
+        branch: ref.startsWith("refs/heads/") ? ref.slice("refs/heads/".length) : undefined,
+        user: req.user.kind === "user" ? req.user.user : undefined,
+        repo: req.git.repo,
+    };
+
+    for (let webhook of webhooks) {
+        const url =  formatString(webhook.url, options);
+        const body = Buffer.from(formatString(webhook.body.toString("latin1"), options), "latin1");
+        await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": webhook.contentType,
+            },
+            body,
+        });
+    }
 });
 
 export default router;

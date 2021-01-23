@@ -1,4 +1,5 @@
 import { v4 as uuid4 } from "uuid";
+import * as sqlite from "sqlite3";
 
 export type User =
     | { kind: "admin" }
@@ -7,29 +8,64 @@ export type User =
     ;
 
 export class AuthManager {
-    private credentials: Map<string, string> = new Map([["zwade", "whoami"]]);
-    private tokens: Map<string, string> = new Map();
+    private db;
 
-    public register(user: string, password: string) {
-        if (this.credentials.has(user)) {
+    constructor() {
+        this.db = new sqlite.Database("./users.sqlite");
+        this.db.run("CREATE TABLE IF NOT EXISTS user_auth (user varchar, password varchar);");
+        this.db.run("CREATE TABLE IF NOT EXISTS user_token (token varchar, user varchar);");
+    }
+
+    private getUser(user: string) {
+        return new Promise<{ user: string, password: string } | undefined>((resolve, reject) => {
+            const statement = this.db.prepare("SELECT user, password FROM user_auth WHERE user = ?")
+            statement.get(user, (error, row) => {
+                console.log(row);
+                resolve(row);
+            })
+        });
+    }
+
+    public async register(user: string, password: string) {
+        const foundUser = await this.getUser(user);
+        if (foundUser) {
             throw new Error("User already exists");
         }
 
-        this.credentials.set(user, password);
+        return new Promise<void>((resolve, reject) => {
+            const statement = this.db.prepare("INSERT INTO user_auth (user, password) VALUES (?, ?)");
+            statement.run(user, password, () => {
+                resolve();
+            })
+        });
     }
 
-    public login(user: string, password: string) {
-        const correctPassword = this.credentials.get(user);
-        return correctPassword !== undefined && correctPassword === password;
+    public async login(user: string, password: string) {
+        const foundUser = await this.getUser(user);
+        if (!foundUser) {
+            return false;
+        }
+        return foundUser.password === password;
     }
 
-    public userFromToken(token: string) {
-        return this.tokens.get(token);
+    public async userFromToken(token: string) {
+        return new Promise<string | undefined>((resolve, reject) => {
+            const statement = this.db.prepare("SELECT user FROM user_token WHERE token = ?");
+            statement.get(token, (err, row) => {
+                resolve(row?.user);
+            })
+        })
     }
 
-    public createToken(user: string) {
-        const uuid = uuid4();
-        this.tokens.set(uuid, user);
-        return uuid;
+    public async createToken(user: string) {
+        const token = uuid4();
+        return new Promise<string>((resolve, reject) => {
+            const statement = this.db.prepare("INSERT INTO user_token (token, user) VALUES (?, ?)");
+            statement.run(token, user, () => {
+                resolve(token);
+            });
+        });
     }
 }
+
+export const authManager = new AuthManager();

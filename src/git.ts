@@ -1,6 +1,10 @@
-import { Response } from "express";
 import * as path from "path";
+
+import * as fs from "mz/fs";
+import { Response } from "express";
 import * as child_process from "child_process";
+
+import { formatString } from "./utils";
 
 export interface Commit {
     parents: string[];
@@ -17,7 +21,7 @@ export interface File {
 }
 
 export class GitManager {
-    private repo;
+    public repo;
     private dir;
 
     constructor(repo: string) {
@@ -25,17 +29,19 @@ export class GitManager {
         this.dir = path.join(__dirname, "../repos", repo);
     }
 
-    private git(subcommand: string, args: string[] = [], stdin: string | Buffer | undefined = undefined) {
+    private git(subcommand: string, args: string[] = [], stdin: string | Buffer | undefined = undefined, cwd: string = this.dir) {
         return new Promise<Buffer>((resolve, reject) => {
-            const proc = child_process.spawn("git", [subcommand, ...args], { cwd: this.dir });
+            const proc = child_process.spawn("git", [subcommand, ...args], { cwd });
             if (stdin) {
                 proc.stdin.write(stdin);
             }
 
             let result = Buffer.from([]);
+            proc.on("error", (err) => reject(err));
             proc.stdout.on("data", (data) => { result = Buffer.concat([result, Buffer.from(data)]) });
             proc.stdout.on("error", (err) => reject(err));
             proc.stdout.on("close", () => resolve(result));
+            proc.stderr.on("data", (data) => { process.stderr.write(data); })
         })
     }
 
@@ -99,7 +105,7 @@ export class GitManager {
         const result = await this.git("cat-file", ["-p", hash]);
         const files = [] as File[];
         for (let line of result.toString().split("\n")) {
-            const match = /^([0-7]{6})\s+(\w+)\s+(\w{40})\s+(\w+)$/.exec(line);
+            const match = /^([0-7]{6})\s+(\w+)\s+(\w{40})\s+(.+)$/.exec(line);
             if (match) {
                 const isDirectory = !!(parseInt("040000", 8) & parseInt(match[1], 8));
                 files.push({
@@ -119,6 +125,24 @@ export class GitManager {
 
         const result = await this.git("cat-file", ["-p", hash]);
         return result.toString();
+    }
+
+    public async create() {
+        await fs.mkdir(path.dirname(this.dir), { recursive: true });
+        await this.git("init", ["--bare", this.dir], undefined, path.join(__dirname, ".."));
+    }
+
+    public async initializeReadme(readme: string) {
+        const tmpdir = await fs.mkdtemp("/tmp/bithug");
+        const repodir = path.join(tmpdir, "localrepo");
+        await this.git("clone", [`http://localhost:1823/${this.repo}`, repodir]);
+        await this.git("checkout", ["master"], undefined, repodir);
+        await fs.writeFile(path.join(repodir, "README.md"), readme);
+        await this.git("add", ["README.md"], undefined, repodir);
+        await this.git("commit", ["-m", "Initializing README"], undefined, repodir);
+        await this.git("push", ["origin", "master"], undefined, repodir);
+        // Apparently modernize doesn't promisify `fs.rm`??? This isn't part of the problem, just a bit silly.
+        await new Promise<void>((resolve) => fs.rm(tmpdir, { force: true, recursive: true }, () => { resolve() }));
     }
 
     public async uploadPackGet(res: Response) {
