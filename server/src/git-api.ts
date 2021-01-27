@@ -146,7 +146,7 @@ router.post("/:user/:repo/git-upload-pack", async (req, res) => {
     await req.git.uploadPackPost(res, req.body);
 });
 
-router.use("/:user/:repo/git-receive-pack", bodyParser.raw({ type: "application/x-git-receive-pack-request" }))
+router.use("/:user/:repo/git-receive-pack", bodyParser.raw({ type: "application/x-git-receive-pack-request", limit: "10mb" }))
 router.post("/:user/:repo/git-receive-pack", async (req, res) => {
     const ref = await req.git.receivePackPost(res, req.body);
     const webhooks = await webhookManager.getWebhooksForRepo(req.git.repo);

@@ -22,15 +22,7 @@ module.exports = {
             "/api": "http://localhost:1823",
             "/zwade/first-repo.git": "http://localhost:1823",
             "/zwade/another-repo.git": "http://localhost:1823",
-            // "/": {
-            //     target: "http://localhost:1823",
-            //     bypass: (req, res, options) => {
-            //         const shouldForward = req.path.startsWith("/api") || req.path.match(/^\/.+\/.+\.git/) !== null;
-            //         if (!shouldForward) {
-            //             return true;
-            //         }
-            //     }
-            // }
+            "/zwade/quine.git": "http://localhost:1823",
         },
     },
 
