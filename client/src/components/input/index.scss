@@ -1,0 +1,36 @@
+@use "../../variables.scss";
+
+.bh-input, .bh-textarea {
+    height: 20px;
+    min-width: 400px;
+    padding: 12px 16px;
+    box-shadow: 0px 0px 0px 2px variables.$color-gray-06;
+
+    border-radius: 4px;
+    border: 0px;
+    outline: none;
+    background: variables.$color-gray-02;
+
+    font-size: 14px;
+    transition: background 100ms ease-in, box-shadow 100ms ease-in;
+
+    &.bh-textarea {
+        height: 100px;
+        resize: none;
+    }
+
+    &:disabled {
+        background: variables.$color-gray-04;
+        cursor: not-allowed;
+    }
+
+    &:not(:disabled) {
+        &:hover, &:focus {
+            background: variables.$color-gray-01;
+        }
+
+        &:focus {
+            box-shadow: 0px 0px 0px 2px variables.$color-green-06;
+        }
+    }
+}

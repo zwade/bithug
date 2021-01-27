@@ -1,0 +1,8 @@
+@use "./variables.scss";
+
+html, body {
+    font-family: "nunito";
+    background-color: variables.$color-gray-01;
+    margin: 0px;
+    padding: 0px;
+}

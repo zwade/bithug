@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction, Response, Request } from "express";
 import cookieParser from "cookie-parser";
 import "express-async-errors";
 
@@ -30,6 +30,15 @@ const main = async () => {
 
     app.use("/", webRouter);
     app.use("/", gitRouter);
+
+    app.use(((err: any, req: Request, res: Response, next: NextFunction) => {
+        res.status(500);
+        if (err instanceof Error) {
+            res.send({ error: err.message });
+        } else {
+            res.send({ error: "Something went wrong..."});
+        }
+    }) as any) // express's types are wrong :'(
     app.listen(1823);
 }
 

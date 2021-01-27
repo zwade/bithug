@@ -1,0 +1,84 @@
+@use "../../variables.scss";
+
+.bh-repo-container {
+    display: grid;
+    grid-template-columns: 600px;
+    grid-auto-rows: max-content;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.bh-repo {
+    display: grid;
+    grid-template: "content" max-content / 600px;
+    justify-content: center;
+    align-items: center;
+
+    &.content {
+        .bh-frame {
+            padding: 0px;
+            row-gap: 32px;
+
+            .title {
+                margin: 32px 32px 0px 32px;
+                .path {
+                    padding: 4px;
+                    display: flex;
+                    flex-direction: row;
+
+                    .path-segment {
+                        &:not(:last-child) {
+                            &::after {
+                                content: "∕";
+                            }
+                        }
+                    }
+                }
+            }
+
+            .bh-blob {
+                margin: 0px 32px 32px 32px;
+            }
+        }
+    }
+}
+
+.tree-view {
+    .files {
+        .file {
+            border-top: 1px solid variables.$color-gray-05;
+            padding: 8px 32px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            &:hover {
+                background-color: variables.$color-gray-00;
+            }
+
+            &:last-child {
+                border-bottom: 1px solid variables.$color-gray-05;
+            }
+
+            i {
+                margin-right: 8px;
+            }
+        }
+    }
+}
+
+.bh-blob {
+    background-color: variables.$color-gray-00;
+    padding: 16px;
+    border-radius: 4px;
+    white-space: pre;
+}
+
+.bh-repo-settings {
+    display: grid;
+    grid-template-columns: auto;
+    grid-auto-rows: max-content;
+    row-gap: 32px;
+}

@@ -8,6 +8,8 @@ export interface Webhook {
     body: Buffer;
 }
 
+export type SerializedWebhook = Omit<Webhook, "body"> & { body: string };
+
 export class WebhookManager {
     private db;
 
@@ -29,7 +31,6 @@ export class WebhookManager {
         return new Promise<Webhook[]>((resolve, reject) => {
             const statement = this.db.prepare("SELECT * FROM webhooks WHERE repo = ? AND user = ?");
             statement.all(repo, user, (err: any, rows: any[]) => {
-                console.log(err, rows);
                 return resolve(rows.map(({ repo, user, url, body, contentType }) => ({ repo, user, url, body, contentType })));
             });
         });

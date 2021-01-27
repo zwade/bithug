@@ -1,0 +1,18 @@
+@use "../../variables.scss";
+
+.bh-code {
+    font-family: monospace;
+    white-space: pre;
+    background-color: variables.$color-gray-00;
+    padding: 16px;
+    border-radius: 4px;
+    overflow: scroll;
+
+    &.code-block {
+        display: block;
+    }
+
+    &.code-inline {
+        display: inline;
+    }
+}

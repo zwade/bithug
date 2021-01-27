@@ -1,0 +1,41 @@
+@use "../../variables.scss";
+
+
+.bh-repo-list {
+    .title {
+        .user {
+            color: variables.$color-yellow-08;
+        }
+    }
+
+    .bh-repo-list-item {
+        border-radius: 4px;
+        padding: 12px;
+        box-shadow: 0px 0px 0px 2px variables.$color-gray-05;
+        background-color: variables.$color-gray-01;
+        cursor: pointer;
+        transition: box-shadow 100ms ease-in;
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+
+        &:hover {
+            box-shadow: 0px 0px 0px 2px variables.$color-green-06;
+        }
+
+        .name {
+            color: variables.$color-green-06;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-right: 16px;
+            font-size: 18px;
+        }
+
+        .description {
+            overflow: hidden;
+            white-space: nowrap;
+            color: variables.$color-gray-07;
+            font-size: 14px;
+        }
+    }
+}

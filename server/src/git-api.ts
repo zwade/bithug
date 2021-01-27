@@ -3,7 +3,7 @@ import * as bodyParser from "body-parser";
 import fetch from "node-fetch";
 
 import { GitManager } from "./git";
-import { webhookManager } from "./webhooks";
+import { SerializedWebhook, webhookManager } from "./webhooks";
 import { formatString } from "./utils";
 
 const router = Router();
@@ -66,7 +66,9 @@ router.get("/:user/:repo/webhooks", async (req, res) => {
         return res.send({ webhooks: [] });
     }
     const webhooks = await webhookManager.getWebhooksForUser(req.git.repo, req.user.user);
-    return res.send(webhooks.map((webhook) => ({ ...webhook, body: webhook.body.toString("base64") })));
+    return res.send(webhooks.map(
+        (webhook): SerializedWebhook => ({ ...webhook, body: webhook.body.toString("base64") }))
+    );
 });
 router.post("/:user/:repo/webhooks", async (req, res) => {
     if (req.user.kind === "admin" || req.user.kind === "none") {
@@ -93,32 +95,41 @@ router.post("/:user/:repo/webhooks", async (req, res) => {
 
 router.use("/:user/:repo/api", async (req, res, next) => {
     const ref = req.query.ref;
-    if (typeof ref !== "string") {
-        return res.send({});
-    }
+    const hash = req.query.hash;
+    if (typeof hash === "string" && hash.match(/^[a-zA-Z0-9]{40}$/)) {
+        req.hash = hash;
+        next();
+    } else if (typeof ref === "string") {
+        const hash = await req.git.resolveRef(ref);
+        if (!hash) {40
+            return res.send({});
+        }
 
-    const hash = await req.git.resolveRef(ref);
-    if (!hash) {
-        return res.send({});
+        req.hash = hash;
+        next();
+    } else {
+        throw new Error("Missing api parameter hash/ref");
     }
-
-    req.hash = hash;
-    next();
 });
 
-router.use("/:user/:repo/api/commit", async (req, res) => {
+router.get("/:user/:repo/api/commit", async (req, res) => {
     const commit = await req.git.getCommit(req.hash);
     res.send({ commit });
 });
 
-router.use("/:user/:repo/api/tree", async (req, res) => {
+router.get("/:user/:repo/api/tree", async (req, res) => {
     const tree = await req.git.getTree(req.hash);
     res.send({ tree });
 });
 
-router.use("/:user/:repo/api/blob", async (req, res) => {
+router.get("/:user/:repo/api/blob", async (req, res) => {
     const blob = await req.git.getBlob(req.hash);
     res.send({ blob });
+});
+
+router.get("/:user/:repo/api/readme", async (req, res) => {
+    const readme = await req.git.getReadme(req.hash);
+    res.send({ readme });
 });
 
 router.get("/:user/:repo/info/refs", (req, res) => {

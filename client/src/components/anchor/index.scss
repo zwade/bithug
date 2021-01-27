@@ -1,0 +1,8 @@
+.bh-anchor {
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}

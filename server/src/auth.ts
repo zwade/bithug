@@ -20,7 +20,6 @@ export class AuthManager {
         return new Promise<{ user: string, password: string } | undefined>((resolve, reject) => {
             const statement = this.db.prepare("SELECT user, password FROM user_auth WHERE user = ?")
             statement.get(user, (error, row) => {
-                console.log(row);
                 resolve(row);
             })
         });

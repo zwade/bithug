@@ -4,9 +4,8 @@ import * as fs from "mz/fs";
 import { Response } from "express";
 import * as child_process from "child_process";
 
-import { formatString } from "./utils";
-
 export interface Commit {
+    hash: string;
     parents: string[];
     tree: string;
     author: string;
@@ -22,11 +21,13 @@ export interface File {
 
 export class GitManager {
     public repo;
+    public name;
     private dir;
 
     constructor(repo: string) {
         this.repo = repo;
         this.dir = path.join(__dirname, "../repos", repo);
+        this.name = repo.split("/")[1].split(".")[0];
     }
 
     private git(subcommand: string, args: string[] = [], stdin: string | Buffer | undefined = undefined, cwd: string = this.dir) {
@@ -92,6 +93,7 @@ export class GitManager {
         }
 
         return {
+            hash,
             parents: headerMap.get("parent") ?? [],
             author: headerMap.get("author")?.[0] ?? "No author",
             tree: headerMap.get("tree")![0],
@@ -143,6 +145,19 @@ export class GitManager {
         await this.git("push", ["origin", "master"], undefined, repodir);
         // Apparently modernize doesn't promisify `fs.rm`??? This isn't part of the problem, just a bit silly.
         await new Promise<void>((resolve) => fs.rm(tmpdir, { force: true, recursive: true }, () => { resolve() }));
+    }
+
+    public async getReadme(ref: string) {
+        const master = await this.resolveRef(ref);
+        if (!master) return undefined;
+        const commit = await this.getCommit(master);
+        if (!commit) return undefined;
+        const tree = await this.getTree(commit.tree);
+        if (!tree) return undefined;
+        const file = tree.find(({ name }) => name === "README.md" || name === "README");
+        if (!file) return undefined;
+        const blob = await this.getBlob(file.hash);
+        return blob;
     }
 
     public async uploadPackGet(res: Response) {

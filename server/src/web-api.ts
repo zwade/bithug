@@ -1,8 +1,10 @@
+import * as path from "path";
+
 import { Router } from "express";
 import * as bodyParser from "body-parser";
+import { fs } from "mz";
 
 import { authManager } from "./auth";
-import { webhookManager } from "./webhooks";
 import { GitManager } from "./git";
 
 const router = Router();
@@ -11,12 +13,12 @@ router.use("/api/login", bodyParser.json());
 router.post("/api/login", async (req, res) => {
     const { user, password } = req.body;
     if (typeof user !== "string" || typeof password !== "string") {
-        return res.status(400).end();
+        return res.status(400).send({ error: "Bad username or password" });
     }
 
     const success = await authManager.login(user, password);
     if (!success) {
-        return res.status(401).end();
+        return res.status(401).send({ error: "Bad username or paassword" });
     }
 
     const token = await authManager.createToken(user);
@@ -31,7 +33,7 @@ router.post("/api/register", async (req, res) => {
         || !user.match(/^[a-zA-Z0-9-_]{3,}$/)
         || typeof password !== "string"
     ) {
-        return res.status(400).end();
+        return res.status(400).send({ error: "Invalid username"});
     }
 
     await authManager.register(user, password);
@@ -52,7 +54,7 @@ The flag is \`${process.env.FLAG ?? "picoCTF{this_is_a_test_flag}"}\`
 
 router.use("/api", (req, res, next) => {
     if (req.user.kind === "none") {
-        return res.status(404).end();
+        return res.status(404).send({ error: "Not found" });
     }
     next();
 });
@@ -72,7 +74,35 @@ router.post("/api/repo/create", async (req, res) => {
     if (initializeReadme) {
         await repo.initializeReadme(`# ${name}\n`);
     }
-    res.send({});
+    res.send({ repo: `${req.user.user}/${name}` });
 })
+
+router.get("/api/self", async (req, res) => {
+    if (req.user.kind !== "user") {
+        throw new Error("Can't get self");
+    }
+
+    const user = req.user.user;
+    let repos: { name: string, readme?: string }[];
+    try {
+        const repoPath = await fs.readdir(path.join(__dirname, "../repos", user));
+        repos = await Promise.all(repoPath
+            .map((repo) => new GitManager((`${user}/${repo}`)))
+            .map(async (git) => ({
+                name: git.name,
+                readme: await git.getReadme("refs/heads/master")
+            }))
+        );
+    } catch (e) {
+        repos = [];
+    }
+
+    res.send({ user, repos });
+});
+
+router.post("/api/logout", async (req, res) => {
+    res.clearCookie("user-token");
+    res.send({});
+});
 
 export default router;
