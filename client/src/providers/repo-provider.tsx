@@ -29,12 +29,17 @@ export interface WebhookRepoState {
     webhooks: string[];
 }
 
-export interface RepoState extends BaseRepoState, FileRepoState, WebhookRepoState {}
+export interface AccessRepoState {
+    users?: string[];
+}
+
+export interface RepoState extends BaseRepoState, FileRepoState, WebhookRepoState, AccessRepoState {}
 
 export interface Repo {
     state: RepoState;
     changeDir: (path: Path, kind: "blob" | "tree") => void;
     refreshWebhooks: () => void;
+    refreshUsers: () => void;
 }
 
 export interface Props {
@@ -79,9 +84,10 @@ export const RepoProvider = (props: Props) => {
     const [baseState, setBaseState] = React.useState<BaseRepoState | undefined>();
     const [fileState, setFileState] = React.useState<FileRepoState | undefined>();
     const [webhookState, setWebhookState] = React.useState<string[]>([]);
+    const [accessState, setAccessState] = React.useState<string[] | undefined>();
 
     const state = baseState !== undefined && fileState !== undefined
-        ? { ...baseState, ...fileState, webhooks: webhookState }
+        ? { ...baseState, ...fileState, webhooks: webhookState, users: accessState }
         : undefined;
 
     const initialPathAsString = props.initialPath?.join("/");
@@ -94,6 +100,16 @@ export const RepoProvider = (props: Props) => {
 
     React.useEffect(() => {
         refreshWebhooks();
+    }, []);
+
+    const refreshUsers = () =>
+        Api.Repo
+            .access(props.repo)
+            .then(setAccessState);
+
+    React.useEffect(() => {
+        refreshWebhooks();
+        refreshUsers();
     }, []);
 
     React.useEffect(() => {
@@ -148,7 +164,7 @@ export const RepoProvider = (props: Props) => {
         );
     } else {
         return (
-            <RepoContext.Provider value={{ state, changeDir, refreshWebhooks }}>
+            <RepoContext.Provider value={{ state, changeDir, refreshWebhooks, refreshUsers }}>
                 { props.children }
             </RepoContext.Provider>
         );

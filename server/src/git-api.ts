@@ -8,7 +8,7 @@ import { formatString } from "./utils";
 
 const router = Router();
 
-router.use("/:user/:repo", async (req, res, next) => {
+router.use("/:user/:repo.git", async (req, res, next) => {
     if (req.user.kind === "none") {
         res.header("WWW-Authenticate", `Basic realm="Git credentials"`);
         res.status(401);
@@ -17,7 +17,7 @@ router.use("/:user/:repo", async (req, res, next) => {
     return next();
 })
 
-router.use("/:user/:repo", async (req, res, next) => {
+router.use("/:user/:repo.git", async (req, res, next) => {
     const repoOwner = req.params.user;
     const repo = req.params.repo;
     if (!/^[a-zA-Z0-9_-]+$/.exec(repoOwner) || !/^[a-zA-Z0-9_\-\.]+$/.exec(repo)) {
@@ -28,25 +28,12 @@ router.use("/:user/:repo", async (req, res, next) => {
     if (user.kind === "none") { throw new Error("unreachable"); }
 
     if (user.kind === "admin" || user.user === repoOwner) {
-        req.git = new GitManager(`${repoOwner}/${repo}`);
+        req.git = new GitManager(`${repoOwner}/${repo}.git`);
         return next();
     }
 
-    const potentialRepo = new GitManager(`${repoOwner}/${repo}`);
-    const hash = await potentialRepo.resolveRef("refs/meta/config");
-    if (!hash) {
-        return res.status(404).end();
-    }
-    const configCommit = await potentialRepo.getCommit(hash);
-    if (!configCommit) {
-        return res.status(404).end()
-    }
-    const configTree = await potentialRepo.getTree(configCommit.tree);
-    const configFile = configTree?.find(({ name, mode }) => name === "access.conf" && mode === "file");
-    if (!configFile) {
-        return res.status(404).end()
-    }
-    const configBlob = await potentialRepo.getBlob(configFile.hash);
+    const potentialRepo = new GitManager(`${repoOwner}/${repo}.git`);
+    const configBlob = await potentialRepo.getAccessConfig();
     if (!configBlob) {
         return res.status(404).end();
     }
@@ -60,8 +47,8 @@ router.use("/:user/:repo", async (req, res, next) => {
     return next();
 })
 
-router.use("/:user/:repo/webhooks", bodyParser.json());
-router.get("/:user/:repo/webhooks", async (req, res) => {
+router.use("/:user/:repo.git/webhooks", bodyParser.json());
+router.get("/:user/:repo.git/webhooks", async (req, res) => {
     if (req.user.kind === "admin" || req.user.kind === "none") {
         return res.send({ webhooks: [] });
     }
@@ -70,7 +57,7 @@ router.get("/:user/:repo/webhooks", async (req, res) => {
         (webhook): SerializedWebhook => ({ ...webhook, body: webhook.body.toString("base64") }))
     );
 });
-router.post("/:user/:repo/webhooks", async (req, res) => {
+router.post("/:user/:repo.git/webhooks", async (req, res) => {
     if (req.user.kind === "admin" || req.user.kind === "none") {
         return res.status(400).end();
     }
@@ -93,7 +80,12 @@ router.post("/:user/:repo/webhooks", async (req, res) => {
     return res.send({});
 });
 
-router.use("/:user/:repo/api", async (req, res, next) => {
+router.get("/:user/:repo.git/access", async (req, res) => {
+    const accessBlob = await req.git.getAccessConfig();
+    res.send({ users: accessBlob?.trim().split("\n") });
+})
+
+router.use("/:user/:repo.git/api", async (req, res, next) => {
     const ref = req.query.ref;
     const hash = req.query.hash;
     if (typeof hash === "string" && hash.match(/^[a-zA-Z0-9]{40}$/)) {
@@ -112,27 +104,27 @@ router.use("/:user/:repo/api", async (req, res, next) => {
     }
 });
 
-router.get("/:user/:repo/api/commit", async (req, res) => {
+router.get("/:user/:repo.git/api/commit", async (req, res) => {
     const commit = await req.git.getCommit(req.hash);
     res.send({ commit });
 });
 
-router.get("/:user/:repo/api/tree", async (req, res) => {
+router.get("/:user/:repo.git/api/tree", async (req, res) => {
     const tree = await req.git.getTree(req.hash);
     res.send({ tree });
 });
 
-router.get("/:user/:repo/api/blob", async (req, res) => {
+router.get("/:user/:repo.git/api/blob", async (req, res) => {
     const blob = await req.git.getBlob(req.hash);
     res.send({ blob });
 });
 
-router.get("/:user/:repo/api/readme", async (req, res) => {
+router.get("/:user/:repo.git/api/readme", async (req, res) => {
     const readme = await req.git.getReadme(req.hash);
     res.send({ readme });
 });
 
-router.get("/:user/:repo/info/refs", (req, res) => {
+router.get("/:user/:repo.git/info/refs", (req, res) => {
     const service = req.query.service;
     if (service === "git-upload-pack") {
         req.git.uploadPackGet(res);
@@ -141,13 +133,13 @@ router.get("/:user/:repo/info/refs", (req, res) => {
     }
 });
 
-router.use("/:user/:repo/git-upload-pack", bodyParser.raw({ type: "application/x-git-upload-pack-request" }))
-router.post("/:user/:repo/git-upload-pack", async (req, res) => {
+router.use("/:user/:repo.git/git-upload-pack", bodyParser.raw({ type: "application/x-git-upload-pack-request" }))
+router.post("/:user/:repo.git/git-upload-pack", async (req, res) => {
     await req.git.uploadPackPost(res, req.body);
 });
 
-router.use("/:user/:repo/git-receive-pack", bodyParser.raw({ type: "application/x-git-receive-pack-request", limit: "10mb" }))
-router.post("/:user/:repo/git-receive-pack", async (req, res) => {
+router.use("/:user/:repo.git/git-receive-pack", bodyParser.raw({ type: "application/x-git-receive-pack-request", limit: "10mb" }))
+router.post("/:user/:repo.git/git-receive-pack", async (req, res) => {
     const ref = await req.git.receivePackPost(res, req.body);
     const webhooks = await webhookManager.getWebhooksForRepo(req.git.repo);
     const options = {
@@ -159,14 +151,18 @@ router.post("/:user/:repo/git-receive-pack", async (req, res) => {
 
     for (let webhook of webhooks) {
         const url =  formatString(webhook.url, options);
-        const body = Buffer.from(formatString(webhook.body.toString("latin1"), options), "latin1");
-        await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": webhook.contentType,
-            },
-            body,
-        });
+        try {
+            const body = Buffer.from(formatString(webhook.body.toString("latin1"), options), "latin1");
+            await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": webhook.contentType,
+                },
+                body,
+            });
+        } catch (e) {
+            console.warn("Failed to push webhook", url, e);
+        }
     }
 });
 

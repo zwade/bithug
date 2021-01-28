@@ -160,6 +160,18 @@ export class GitManager {
         return blob;
     }
 
+    public async getAccessConfig() {
+        const hash = await this.resolveRef("refs/meta/config");
+        if (!hash) return undefined
+        const configCommit = await this.getCommit(hash);
+        if (!configCommit) return undefined
+        const configTree = await this.getTree(configCommit.tree);
+        const configFile = configTree?.find(({ name, mode }) => name === "access.conf" && mode === "file");
+        if (!configFile) return undefined
+        const configBlob = await this.getBlob(configFile.hash);
+        return configBlob;
+    }
+
     public async uploadPackGet(res: Response) {
         res.status(200);
         res.header("content-type", "application/x-git-upload-pack-advertisement")

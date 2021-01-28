@@ -5,6 +5,7 @@ import "express-async-errors";
 import gitRouter from "./git-api";
 import authRouter from "./auth-api";
 import webRouter from "./web-api";
+import staticRouter from "./static-api";
 import { GitManager } from "./git";
 import { User } from "./auth";
 
@@ -30,8 +31,10 @@ const main = async () => {
 
     app.use("/", webRouter);
     app.use("/", gitRouter);
+    app.use("/", staticRouter);
 
     app.use(((err: any, req: Request, res: Response, next: NextFunction) => {
+        console.error("Error", err)
         res.status(500);
         if (err instanceof Error) {
             res.send({ error: err.message });
@@ -45,5 +48,9 @@ const main = async () => {
 process.on("unhandledRejection", (rejection) => {
     console.error("Unhandled promise rejection", rejection);
 });
+
+process.on("uncaughtException", (error) => {
+    console.error("Uncaught exception", error);
+})
 
 main()

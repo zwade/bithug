@@ -9,8 +9,9 @@ export interface Props {
 }
 
 export const RepoNoContent = (props: Props) => {
+    const { data } = React.useContext(UserContext);
     const repoName = props.repo.split("/")[1];
-    const repoHref = getRepoUri(props.repo);
+    const repoHref = getRepoUri(data?.user ?? "", props.repo);
 
     return (
         <div className="bh-repo no-content">
@@ -19,6 +20,7 @@ export const RepoNoContent = (props: Props) => {
                 <div>
                     This repo is still empty, but you can start adding files with just a few commands.
                 </div>
+                <div className="frame-label">bash</div>
                 <Code>
                     {
 `git clone ${repoHref}

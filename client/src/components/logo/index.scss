@@ -1,5 +1,8 @@
+@use "../../variables.scss";
+
 .bh-logo {
     font-size: 48px;
     font-family: "Dosis";
-    padding: 24px
+    padding: 24px;
+    color: variables.$color-yellow-08;
 }

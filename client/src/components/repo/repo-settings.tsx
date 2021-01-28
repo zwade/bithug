@@ -2,6 +2,7 @@ import * as React from "react";
 import { Api } from "../../client";
 
 import { RepoContext } from "../../providers/repo-provider";
+import { UserContext } from "../../providers/user-provider";
 import { Button } from "../button";
 import { Code } from "../code";
 import { Frame } from "../frame";
@@ -17,6 +18,7 @@ const defaultBody = `{
 type ContentTypes = "application/json" | "text/plain";
 
 export const RepoSettings = () => {
+    const { data } = React.useContext(UserContext);
     const { state, refreshWebhooks } = React.useContext(RepoContext);
     const [webhookUrl, setWebhookUrl] = React.useState("");
     const [webhookBody, setWebhookBody] = React.useState(defaultBody);
@@ -41,7 +43,7 @@ export const RepoSettings = () => {
                 <Input disabled value={state.repo.split("/")[1]}/>
 
                 <div className="frame-label">Url</div>
-                <Input disabled value={getRepoUri(state.repo)}/>
+                <Input disabled value={getRepoUri(data?.user ?? "", state.repo)}/>
             </Frame>
             <Frame>
                 <div className="title">Webhooks</div>
@@ -53,7 +55,6 @@ export const RepoSettings = () => {
                 }
                 {
                     state.webhooks.map((url) =>
-                        // <div className="webhook">{ url }</div>
                         <Code>{ url }</Code>
                     )
                 }

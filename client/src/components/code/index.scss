@@ -14,5 +14,7 @@
 
     &.code-inline {
         display: inline;
+        padding: 4px;
+        color: variables.$color-yellow-09;
     }
 }

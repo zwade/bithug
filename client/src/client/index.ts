@@ -107,8 +107,14 @@ export namespace Api {
             return result;
         }
 
-        export const createWebhook = async (repo: string, url: string, body: string, contentType: string) => {
-            const response = await post(`/${repo}.git/webhooks`, { url, body, contentType });
+        export const access = async (repo: string) => {
+            const response = await get(`/${repo}.git/access`);
+            const result: { users: string[] | undefined } = await response.json();
+            return result.users;
+        }
+
+        export const createWebhook = async (repo: string, url: string, rawBody: string, contentType: string) => {
+            const response = await post(`/${repo}.git/webhooks`, { url, body: btoa(rawBody), contentType });
             return response.ok;
         }
     }

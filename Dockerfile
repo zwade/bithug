@@ -4,7 +4,9 @@ WORKDIR /problem
 
 RUN apt update && apt upgrade -y && apt install -y git
 
-ADD package.json yarn.lock server/package.json ./
+ADD package.json yarn.lock ./
+ADD server/package.json ./server/package.json
+ADD client/package.json ./client/package.json
 RUN yarn install --frozen-lockfile
 
 ADD . .

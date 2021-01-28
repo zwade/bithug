@@ -2,20 +2,27 @@ import * as React from "react";
 import { useParams } from "react-router";
 import { RepoProvider } from "../../providers/repo-provider";
 
+import { unreachable } from "../../utils";
 import { Nav } from "../nav";
+import { Tabs } from "../tabs";
 import { RepoContent } from "./repo-content";
 import { RepoNoContent } from "./repo-no-content";
-import { Tabs } from "../tabs";
 import { RepoSettings } from "./repo-settings";
+import { RepoUsers } from "./repo-users";
 
 import "./index.scss";
 
 const _Repo = () => {
-    const [tab, setTab] = React.useState<"Code" | "Settings">("Code");
+    const [tab, setTab] = React.useState<"Code" | "Settings" | "Users">("Code");
     return (
         <div className="bh-repo-container">
-            <Tabs currentTab={tab} onChange={setTab} options={["Code", "Settings"]}/>
-            { tab === "Code" ? <RepoContent/> : <RepoSettings/> }
+            <Tabs currentTab={tab} onChange={setTab} options={["Code", "Settings", "Users"]}/>
+            {
+                tab === "Code" ? <RepoContent/> :
+                tab === "Settings" ? <RepoSettings/> :
+                tab === "Users" ? <RepoUsers/> :
+                unreachable(tab)
+            }
         </div>
     )
 }

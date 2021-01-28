@@ -3,6 +3,8 @@ export const classes = (...args: (string | undefined)[]) =>
         .filter((x): x is string => x !== undefined)
         .join(" ");
 
+
+export const unreachable = (arg: never): never => arg;
 /**
  * Hi just a friendly reminder that this is _not_ an client problem.
  * Please don't spend too much time scrutinizing my mildly janky

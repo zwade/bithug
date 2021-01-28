@@ -1,4 +1,8 @@
 dist/
-repos/
-node_modules/
-*.sqlite
+*/dist
+repos
+*/repos
+node_modules
+*/node_modules
+.git
+*/*.sqlite
