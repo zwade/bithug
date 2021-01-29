@@ -1,0 +1,10 @@
+{
+  "author": "zwad3",
+  "score": 500,
+  "name": "Bithug",
+  "event": "picoCTF-2021",
+  "description": "{{url_for('source.tar')}}",
+  "category": "Web Exploitation",
+  "hints": [""],
+  "organization": "CMU"
+}
