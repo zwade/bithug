@@ -9,6 +9,7 @@ import { Frame } from "../frame";
 import { Input, TextArea } from "../input";
 import { Radio } from "../radio";
 import { getRepoUri } from "./utils";
+import { Webhook } from "./webhook";
 
 const defaultBody = `{
     "branch": "{{branch}}",
@@ -54,8 +55,15 @@ export const RepoSettings = () => {
                         : undefined
                 }
                 {
-                    state.webhooks.map((url) =>
-                        <Code>{ url }</Code>
+                    state.webhooks.map(({ url, uid }) =>
+                        <Webhook
+                            url={url}
+                            uid={uid}
+                            onDelete={async () => {
+                                await Api.Repo.deleteWebhook(state.repo, uid);
+                                refreshWebhooks();
+                            }}
+                        />
                     )
                 }
 

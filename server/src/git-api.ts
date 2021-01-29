@@ -27,12 +27,16 @@ router.use("/:user/:repo.git", async (req, res, next) => {
     const user = req.user;
     if (user.kind === "none") { throw new Error("unreachable"); }
 
+    const potentialRepo = new GitManager(`${repoOwner}/${repo}.git`);
+    if (!await potentialRepo.exists()) {
+        return res.status(404).end();
+    }
+
     if (user.kind === "admin" || user.user === repoOwner) {
-        req.git = new GitManager(`${repoOwner}/${repo}.git`);
+        req.git = potentialRepo
         return next();
     }
 
-    const potentialRepo = new GitManager(`${repoOwner}/${repo}.git`);
     const configBlob = await potentialRepo.getAccessConfig();
     if (!configBlob) {
         return res.status(404).end();
@@ -62,7 +66,7 @@ router.post("/:user/:repo.git/webhooks", async (req, res) => {
         return res.status(400).end();
     }
 
-    const { url, body, contentType } = await req.body;
+    const { url, body, contentType } = req.body;
     const validationUrl = new URL(url);
     if (validationUrl.port !== "" && validationUrl.port !== "80") {
         throw new Error("Url must go to port 80");
@@ -79,6 +83,19 @@ router.post("/:user/:repo.git/webhooks", async (req, res) => {
     await webhookManager.addWebhook(req.git.repo, req.user.user, url, contentType, trueBody);
     return res.send({});
 });
+router.delete("/:user/:repo.git/webhooks", async(req, res) => {
+    if (req.user.kind === "admin" || req.user.kind === "none") {
+        return res.status(400).end();
+    }
+
+    const { uid } = req.body;
+    if (typeof uid !== "string") {
+        throw new Error("Bad arguments");
+    }
+
+    await webhookManager.deleteWebhook(req.git.repo, req.user.user, uid);
+    return res.send({});
+})
 
 router.get("/:user/:repo.git/access", async (req, res) => {
     const accessBlob = await req.git.getAccessConfig();

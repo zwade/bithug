@@ -46,6 +46,15 @@ export class GitManager {
         })
     }
 
+    public async exists() {
+        try {
+            await fs.access(this.dir);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     public async resolveRef(ref: string) {
         if (ref.match(/^[a-zA-Z0-9]{40}$/)) {
             return ref;
@@ -201,25 +210,10 @@ export class GitManager {
 
     public async receivePackPost(res: Response, data: Buffer) {
         const results = await this.git("receive-pack", ["--stateless-rpc", this.dir], data);
-        const lines = results.toString().split("\n")
-        for (let line of lines) {
-            if (!line.startsWith("0000")) {
-                res.write(line + "\n");
-            } else {
-                const band = line[8]
-                const ref = line.slice(9).trim();
-                res.write("0000");
-                if (ref.startsWith("refs/heads/")) {
-                    const branchName = ref.slice("refs/heads/".length);
-                    this.writeLine(res, `${band}Branch ${branchName} updated!`)
-                }
-                res.write("0000")
-                res.end();
-                return ref;
-            }
-        }
-        res.end();
-        return "unknown";
+        res.send(results);
+        const [refUpdate] = data.toString().split("\0");
+        const [_old, _new, ref] = refUpdate.split(" ");
+        return ref;
     }
 
     public writeLine(res: Response, data: string) {

@@ -74,6 +74,8 @@
     padding: 16px;
     border-radius: 4px;
     white-space: pre;
+    font-family: monospace;
+    overflow: auto;
 }
 
 .bh-repo-settings {
@@ -81,4 +83,25 @@
     grid-template-columns: auto;
     grid-auto-rows: max-content;
     row-gap: 32px;
+}
+
+.bh-webhook {
+    display: grid;
+    grid-template:
+        "url delete" 48px
+        / 1fr  max-content;
+    background-color: variables.$color-gray-00;
+    border-radius: 4px;
+    align-items: center;
+
+    .url {
+        padding: 16px;
+    }
+
+    .delete {
+        padding: 16px;
+        font-size: 24px;
+        color: variables.$color-red-06;
+        cursor: pointer;
+    }
 }

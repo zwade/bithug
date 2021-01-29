@@ -4,16 +4,8 @@ import type { Commit, File } from "@bithug/server/dist/git";
 import type { SerializedWebhook } from "@bithug/server/dist/webhooks";
 
 export namespace Api {
-    const post = async (path: string, data: object, suppressError?: boolean) => {
-        const result = await fetch(path, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-            credentials: "include",
-        });
-
+    const request = async (path: string, options: RequestInit | undefined, suppressError?: boolean) => {
+        const result = await fetch(path, options);
         if (!result.ok && !suppressError) {
             const { error } = await result.json();
             toast.error(error);
@@ -23,19 +15,33 @@ export namespace Api {
         return result;
     }
 
-   const get = async (path: string, suppressError?: boolean) => {
-        const result = await fetch(path, {
+    const post = (path: string, data: object, suppressError?: boolean) => {
+        return request(path, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+            credentials: "include",
+        }, suppressError);
+    }
+
+    const del = (path: string, data: object, suppressError?: boolean) => {
+        return request(path, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+            credentials: "include",
+        }, suppressError);
+    }
+
+    const get = (path: string, suppressError?: boolean) => {
+        return request(path, {
             method: "GET",
             credentials: "include",
-        });
-
-        if (!result.ok && !suppressError) {
-            const { error } = await result.json();
-            toast.error(error);
-            throw new Error(error);
-        }
-
-        return result;
+        }, suppressError);
     }
 
     export namespace Web {
@@ -107,15 +113,20 @@ export namespace Api {
             return result;
         }
 
+        export const createWebhook = async (repo: string, url: string, rawBody: string, contentType: string) => {
+            const response = await post(`/${repo}.git/webhooks`, { url, body: btoa(rawBody), contentType });
+            return response.ok;
+        }
+
+        export const deleteWebhook = async (repo: string, uid: string) => {
+            const response = await del(`/${repo}.git/webhooks`, { uid });
+            return response.ok;
+        }
+
         export const access = async (repo: string) => {
             const response = await get(`/${repo}.git/access`);
             const result: { users: string[] | undefined } = await response.json();
             return result.users;
-        }
-
-        export const createWebhook = async (repo: string, url: string, rawBody: string, contentType: string) => {
-            const response = await post(`/${repo}.git/webhooks`, { url, body: btoa(rawBody), contentType });
-            return response.ok;
         }
     }
 }

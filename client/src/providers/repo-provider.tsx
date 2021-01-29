@@ -26,7 +26,7 @@ export interface FileRepoState {
 }
 
 export interface WebhookRepoState {
-    webhooks: string[];
+    webhooks: { url: string, uid: string }[];
 }
 
 export interface AccessRepoState {
@@ -83,7 +83,7 @@ export const RepoProvider = (props: Props) => {
     const [noCommits, setNoCommits] = React.useState<true | undefined>();
     const [baseState, setBaseState] = React.useState<BaseRepoState | undefined>();
     const [fileState, setFileState] = React.useState<FileRepoState | undefined>();
-    const [webhookState, setWebhookState] = React.useState<string[]>([]);
+    const [webhookState, setWebhookState] = React.useState<{ url: string, uid: string }[]>([]);
     const [accessState, setAccessState] = React.useState<string[] | undefined>();
 
     const state = baseState !== undefined && fileState !== undefined
@@ -96,7 +96,7 @@ export const RepoProvider = (props: Props) => {
     const refreshWebhooks = () =>
         Api.Repo
             .webhooks(props.repo)
-            .then((webhooks) => setWebhookState(webhooks.map(({ url }) => url)));
+            .then((webhooks) => setWebhookState(webhooks.map(({ url, uid }) => ({ url, uid }))));
 
     React.useEffect(() => {
         refreshWebhooks();
