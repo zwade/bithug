@@ -10,7 +10,8 @@
         "build": "yarn build:server && yarn build:client",
         "watch:server": "cd server && yarn watch",
         "watch:client": "cd client && yarn watch",
-        "watch": "concurrently --kill-others 'yarn watch:server' 'yarn watch:client'"
+        "watch": "concurrently --kill-others 'yarn watch:server' 'yarn watch:client'",
+        "distro": "tar -cvf distribution.tgz Dockerfile .dockerignore README.md tsconfig.json package.json yarn.lock client/{index.html,package.json,tsconfig.json,webpack.config.js,yarn.lock,src} server/{package.json,tsconfig.json,src}"
     },
     "devDependencies": {
         "concurrently": "^5.3.0",
