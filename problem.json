@@ -3,7 +3,7 @@
   "score": 500,
   "name": "Bithug",
   "event": "picoCTF-2021",
-  "description": "{{url_for('source.tar')}}",
+  "description": "{{url_for('distribution.tgz')}}",
   "category": "Web Exploitation",
   "hints": [""],
   "organization": "CMU"
