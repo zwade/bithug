@@ -17,4 +17,7 @@ EXPOSE 1823
 RUN git config --global user.email "bithug@bit.hug";
 RUN git config --global user.name "Bithug";
 
+ARG FLAG
+ENV FLAG $FLAG
+
 CMD ["node", "server/dist/index.js"]
