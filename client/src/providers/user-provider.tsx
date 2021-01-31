@@ -1,7 +1,8 @@
 import * as React from "react";
 
+import { TheGreatLie } from "react-pwn";
+
 import { Api } from "../client";
-import { TheGreatLie } from "../utils";
 
 type User = { user: string; repos: { name: string, readme?: string }[] }
 

@@ -1,8 +1,8 @@
 import * as React from "react";
 
+import { Code, Frame } from "react-pwn";
+
 import { RepoContext } from "../../providers/repo-provider";
-import { Code } from "../code";
-import { Frame } from "../frame";
 
 
 export const RepoUsers = () => {

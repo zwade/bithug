@@ -2,9 +2,8 @@ import * as React from "react";
 import { useParams } from "react-router";
 import { RepoProvider } from "../../providers/repo-provider";
 
-import { unreachable } from "../../utils";
+import { unreachable, Tabs } from "react-pwn";
 import { Nav } from "../nav";
-import { Tabs } from "../tabs";
 import { RepoContent } from "./repo-content";
 import { RepoNoContent } from "./repo-no-content";
 import { RepoSettings } from "./repo-settings";

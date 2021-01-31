@@ -1,4 +1,4 @@
-@use "../../variables.scss";
+@use "~react-pwn/palette.scss";
 
 .bh-repo-container {
     display: grid;
@@ -47,7 +47,7 @@
 .tree-view {
     .files {
         .file {
-            border-top: 1px solid variables.$color-gray-05;
+            border-top: 1px solid palette.$color-neutral-05;
             padding: 8px 32px;
             cursor: pointer;
             display: flex;
@@ -55,11 +55,11 @@
             align-items: center;
 
             &:hover {
-                background-color: variables.$color-gray-00;
+                background-color: palette.$color-neutral-00;
             }
 
             &:last-child {
-                border-bottom: 1px solid variables.$color-gray-05;
+                border-bottom: 1px solid palette.$color-neutral-05;
             }
 
             i {
@@ -70,7 +70,7 @@
 }
 
 .bh-blob {
-    background-color: variables.$color-gray-00;
+    background-color: palette.$color-neutral-00;
     padding: 16px;
     border-radius: 4px;
     white-space: pre;
@@ -90,7 +90,7 @@
     grid-template:
         "url delete" 48px
         / 1fr  max-content;
-    background-color: variables.$color-gray-00;
+    background-color: palette.$color-neutral-00;
     border-radius: 4px;
     align-items: center;
 
@@ -101,7 +101,7 @@
     .delete {
         padding: 16px;
         font-size: 24px;
-        color: variables.$color-red-06;
+        color: palette.$color-error;
         cursor: pointer;
     }
 }

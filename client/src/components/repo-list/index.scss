@@ -1,18 +1,18 @@
-@use "../../variables.scss";
+@use "~react-pwn/palette.scss";
 
 
 .bh-repo-list {
     .title {
         .user {
-            color: variables.$color-yellow-08;
+            color: palette.$color-secondary-08;
         }
     }
 
     .bh-repo-list-item {
         border-radius: 4px;
         padding: 12px;
-        box-shadow: 0px 0px 0px 2px variables.$color-gray-05;
-        background-color: variables.$color-gray-01;
+        box-shadow: 0px 0px 0px 2px palette.$color-neutral-05;
+        background-color: palette.$color-neutral-01;
         cursor: pointer;
         transition: box-shadow 100ms ease-in;
         display: flex;
@@ -20,11 +20,11 @@
         align-items: baseline;
 
         &:hover {
-            box-shadow: 0px 0px 0px 2px variables.$color-green-06;
+            box-shadow: 0px 0px 0px 2px palette.$color-primary-06;
         }
 
         .name {
-            color: variables.$color-green-06;
+            color: palette.$color-primary-06;
             font-weight: 700;
             flex-shrink: 0;
             margin-right: 16px;
@@ -34,7 +34,7 @@
         .description {
             overflow: hidden;
             white-space: nowrap;
-            color: variables.$color-gray-07;
+            color: palette.$color-neutral-07;
             font-size: 14px;
         }
     }

@@ -1,15 +1,13 @@
 import * as React from "react";
 
-import { Api } from "../../client";
+import { Button, Input, A } from "react-pwn";
 
-import { Button } from "../button";
-import { Input } from "../input";
+import { Api } from "../../client";
 import { Logo } from "../logo";
-import { A } from "../anchor";
 import { navigate } from "../history";
+import { UserContext } from "../../providers/user-provider";
 
 import "./index.scss";
-import { UserContext } from "../../providers/user-provider";
 
 export const Register = () => {
     const [username, setUsername] = React.useState("");

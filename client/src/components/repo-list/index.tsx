@@ -1,12 +1,12 @@
 import * as React from "react";
 
+import { Frame, Button } from "react-pwn";
+
 import { UserContext } from "../../providers/user-provider";
-import { Frame } from "../frame";
 import { RepoListItem } from "./repo-list-item";
+import { navigate } from "../history";
 
 import "./index.scss";
-import { Button } from "../button";
-import { navigate } from "../history";
 
 export const RepoList = () => {
     const { data } = React.useContext(UserContext);

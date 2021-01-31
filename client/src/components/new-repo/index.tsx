@@ -1,12 +1,10 @@
 import * as React from "react";
 
+import { Button, Frame, Input, Radio } from "react-pwn";
+
 import { Api } from "../../client";
-import { Button } from "../button";
-import { Frame } from "../frame";
 import { navigate } from "../history";
-import { Input } from "../input";
 import { Nav } from "../nav";
-import { Radio } from "../radio";
 
 import "./index.scss";
 

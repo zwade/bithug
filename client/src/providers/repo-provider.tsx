@@ -1,8 +1,8 @@
 import * as React from "react";
 
 import type { File } from "@bithug/server/dist/git"; // TODO(zwade): Make a path alias so this looks less jank
+import { TheGreatLie } from "react-pwn";
 
-import { TheGreatLie } from "../utils";
 import { Api } from "../client";
 import { navigate } from "../components/history";
 

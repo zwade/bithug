@@ -1,7 +1,8 @@
 import * as React from "react";
+
+import { Code, Frame } from "react-pwn";
+
 import { UserContext } from "../../providers/user-provider";
-import { Code } from "../code";
-import { Frame } from "../frame";
 import { getRepoUri } from "./utils";
 
 export interface Props {

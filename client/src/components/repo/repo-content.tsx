@@ -1,10 +1,10 @@
 import * as React from "react";
 
+import { A, Frame } from "react-pwn";
+
 import { RepoContext } from "../../providers/repo-provider";
-import { A } from "../anchor";
 import { Tree } from "./tree";
 import { Blob } from "./blob";
-import { Frame } from "../frame";
 
 export const RepoContent = () => {
     const { state, changeDir } = React.useContext(RepoContext);

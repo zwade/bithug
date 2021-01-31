@@ -1,13 +1,10 @@
 import * as React from "react";
 import { Api } from "../../client";
 
+import { Button, Frame, Input, TextArea, Radio } from "react-pwn";
+
 import { RepoContext } from "../../providers/repo-provider";
 import { UserContext } from "../../providers/user-provider";
-import { Button } from "../button";
-import { Code } from "../code";
-import { Frame } from "../frame";
-import { Input, TextArea } from "../input";
-import { Radio } from "../radio";
 import { getRepoUri } from "./utils";
 import { Webhook } from "./webhook";
 

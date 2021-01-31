@@ -1,5 +1,6 @@
 import * as React from "react";
-import { classes } from "../../utils";
+
+import { classes } from "react-pwn/";
 
 import "./index.scss";
 

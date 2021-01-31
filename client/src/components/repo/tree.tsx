@@ -1,7 +1,8 @@
 import * as React from "react";
 
 import { File } from "@bithug/server/dist/git"
-import { classes } from "../../utils";
+import { classes } from "react-pwn";
+
 import { Path } from "../../providers/repo-provider";
 import { Icon } from "../icon";
 
