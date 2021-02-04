@@ -3,8 +3,22 @@
   "score": 500,
   "name": "Bithug",
   "event": "picoCTF-2021",
-  "description": "{{url_for('distribution.tgz')}}",
+  "description": "Code management software is way too bloated. Try our new lightweight solution, BitHug.\nSource: {{url_for('distribution.tgz')}}",
   "category": "Web Exploitation",
-  "hints": [""],
-  "organization": "CMU"
+  "hints": ["Every user gets their own target repository to attack called `_/<user>.git`, but no permission to read it"],
+  "organization": "CMU",
+  "dont_template": [
+    "client",
+    "server",
+    ".dockerignore",
+    ".gitattributes",
+    ".gitignore",
+    "challenge.py",
+    "distribution.tgz",
+    "Dockerfile",
+    "package.json",
+    "README.md",
+    "tsconfig.json",
+    "yarn.lock"
+  ]
 }
